@@ -1,16 +1,14 @@
 import React from "react";
 
-import { Card } from "./components/Card";
+import { Game } from "./components/Game";
 import { Hand } from "./components/Hand";
+
+import {BoardProvider} from './state/board';
 
 export const App = () => {
   return (
-    <>
-      <Hand></Hand>
-
-      <Card />
-      <Card />
-      <Card />
-    </>
+    <BoardProvider>
+      <Game />
+    </BoardProvider>
   )
 }

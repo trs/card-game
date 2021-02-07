@@ -1,29 +1,80 @@
 import React from 'react';
 import Draggable from 'react-draggable';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
-export const Card = () => {
+import { BoardContext } from '../state/board';
+import {CardModel, CardModelState} from '../state/models';
+
+export interface CardProps extends CardModel {
+
+}
+
+export const Card: React.FC<CardProps> = (props) => {
+  const [, dispatch] = React.useContext(BoardContext);
+
   return (
-    <Draggable >
-      <CardWrapper>
-        <CardStyle>
-          Card
+    <Draggable
+      position={props}
+      onStart={(e, data) => {
+        dispatch({
+          type: 'CARD_DRAG_START',
+          id: props.id
+        });
+        dispatch({
+          type: 'CARD_ADD_STATE',
+          id: props.id,
+          state: CardModelState.Drag
+        })
+      }}
+      onDrag={(e, data) => {
+        dispatch({
+          type: 'CARD_DRAG',
+          id: props.id,
+          x: data.x,
+          y: data.y
+        })
+      }}
+      onStop={(e, data) => {
+        dispatch({
+          type: 'CARD_DRAG_STOP',
+          id: props.id
+        });
+        dispatch({
+          type: 'CARD_REMOVE_STATE',
+          id: props.id,
+          state: CardModelState.Drag
+        })
+      }}
+    >
+      <CardWrapper z={props.z}>
+        <CardStyle state={props.state}>
+          <span>ID: {props.id}</span>
+          <span>x: {props.x}</span>
+          <span>y: {props.y}</span>
+          <span>z: {props.z}</span>
         </CardStyle>
       </CardWrapper>
     </Draggable>
   )
 };
 
-const CardWrapper = styled.div`
+const CardWrapper = styled.div<{z: number}>`
   position: absolute;
-  :active {
-    z-index: 2;
+
+  ${props => props.z && css`
+    z-index: ${props.z};
+  `}
+  :hover, :active {
+    z-index: 999;
   }
 `;
 
-const CardStyle = styled.div`
-  width: calc(63px);
-  height: calc(88px);
+const CardStyle = styled.div<{state: CardModelState}>`
+  --base-width: 63px;
+  --base-height: 88px;
+
+  width: calc(var(--base-width) * 1.5);
+  height: calc(var(--base-height) * 1.5);
   background-color: #ffffff;
   border: 1px solid #111111;
   border-radius: 4px;
@@ -32,14 +83,16 @@ const CardStyle = styled.div`
 
   cursor: grab;
 
+  display: flex;
+  flex-direction: column;
+
   // state
-  :hover {
-    transform:
-      scale(1.05, 1.05);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  :hover:not(:active) {
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, .5);
   }
 
-  :active {
+  ${props => (props.state & CardModelState.Drag) && css`
     cursor: grabbing;
     transform:
       scale(1.25, 1.25)
@@ -47,5 +100,5 @@ const CardStyle = styled.div`
       rotateX(30deg);
 
     box-shadow: 0 20px 15px rgba(0, 0, 0, 0.15);
-  }
+  `}
 `;
